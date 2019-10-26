@@ -9,7 +9,7 @@
 #include "INFO_LCD.h"
 #include "keypad.h"
 
-#define NUMBEROFQUESTIONS 6
+#define NUMBEROFQUESTIONS 7
 #define ZERO 0
 #define DONE 3
 #define SCORING 2
@@ -36,7 +36,7 @@ static Flag_t next_question = ON;
 static Flag_t get_answer = OFF;
 static Flag_t answer_ready = OFF;
 
-static uint8 questions[NUMBEROFQUESTIONS][17] = {"Do you love me ?","Do you need me ?", "Do you want me?", "Do you?","Do you?", "Score:"};
+static uint8 questions[NUMBEROFQUESTIONS][17] = {"WELCOME ^_^","Do you love me ?","Do you need me ?", "Do you want me?", "Do you?","Do you?", "Score:"};
 
 void QuestionDisplayTask(void)
 {
