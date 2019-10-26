@@ -31,6 +31,7 @@ extern Enum_LCDState LCD_sendCommand(uint8 COPY_CMND);extern Enum_LCDState LCD_
 extern Enum_LCDState LCD_DispChar(uint8 COPY_Data);extern Enum_LCDState LCD_displayString(uint8 *COPY_ptrString);extern Enum_LCDState LCD_gotoRowColumn( uint8 COPY_u8Row , uint8 COPY_u8Column);
 extern Enum_LCDState LCD_displayStringRowColumn(uint8 *COPY_ptrString,uint8 COPY_Row,uint8 COPY_Column);extern void LCD_NUM_DISP(uint8 COPY_u8Row , uint8 COPY_u8Column, uint16 COPY_u16num);
 extern Enum_LCDState LCD_Clear(void);
+extern Enum_LCDState LCD_VidDrawPattern(uint8 COPY_u8Row,uint8 COPY_u8Col,uint8* COPY_pu8DrawPattern,uint8 COPY_u8Size);
 
 
 #define CMD_BUFFER_EMPTY 0#define CMD_ACUIRED 1#define CMD_FREE   0

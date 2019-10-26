@@ -14,6 +14,8 @@
 #define DONE 3
 #define SCORING 2
 #define GONE 7
+#define DRAW 1
+
 
 typedef enum {
 	APP_NO = 2,
@@ -21,10 +23,22 @@ typedef enum {
 	APP_SKIP = 3,
 }answers_t;
 
+static uint8 Draw_Flag = ZERO;
 static answers_t answers[NUMBEROFQUESTIONS] = {APP_YES, APP_YES, APP_YES, APP_YES, APP_YES};
 static uint8 g_key = NOT_INITIALIZED;
 static uint8 question_ptr = NOT_INITIALIZED;
 static uint8 score = NOT_READY;
+static uint8  LOC_u8DrawPattern[]=
+{
+		0b00001,0b00010,0b00011,0b00100,0b00011,0b00100,0b00011,0b00100,//Char0
+		0b00011,0b00000,0b00000,0b00000,0b00000,0b00000,0b00000,0b00000, //Char1
+		0b11110,0b00001,0b00000,0b00000,0b00000,0b00000,0b00000,0b00000, //Char2
+		0b00000,0b11110,0b01000,0b10001,0b10010,0b10010,0b01100,0b00000, //Char3
+		0b00000,0b10000,0b01110,0b00010,0b00010,0b00010,0b00010,0b00010,//char4
+		0b00110,0b01000,0b10000,0b00000,0b00000,0b00000,0b00000,0b00000, //Char5
+		//Char6
+		//Char7
+};
 
 typedef enum{
 	ON,
@@ -140,6 +154,7 @@ void ScoreDisplay(void){
 			if(LCD_Finished == status){
 				LCD_gotoState = PENDING;
 				get_answer = DONE;
+				Draw_Flag = DRAW;
 			}
 		}
 	}
@@ -168,6 +183,16 @@ void BuzzerDisplay(void){
 	}
 }
 
+void DrawPattern(void){
+	static uint8 status = ZERO;
+	if(DRAW == Draw_Flag){
+		status = LCD_VidDrawPattern(1,0,LOC_u8DrawPattern,16);
+		if(LCD_Finished == status){
+			Draw_Flag = ZERO;
+		}
+	}
+}
+
 int main(void)
 {
 	SOS_Init();
@@ -178,6 +203,7 @@ int main(void)
 	StrTask_t Score_Update={AnswerCheckTask,0,20};
 	StrTask_t Score_Display={ScoreDisplay,0,2};
 	StrTask_t BUZZER_Display={BuzzerDisplay,0,500};
+	StrTask_t Draw_Pattern={DrawPattern,0,2};
 
 	SOS_CreateTask(&KEYPAD_initTask);
 	SOS_CreateTask(&LCD_initTask);
@@ -186,6 +212,7 @@ int main(void)
 	SOS_CreateTask(&Score_Update);
 	SOS_CreateTask(&Score_Display);
 	SOS_CreateTask(&BUZZER_Display);
+	SOS_CreateTask(&Draw_Pattern);
 
 	SOS_Scheduler();
 }

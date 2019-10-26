@@ -286,23 +286,139 @@ Enum_LCDState LCD_Clear(void)
 	uint8 LOC_CurrentTaskAquiringCMD=1;
 	Enum_LCDState LOC_LCDState=LCD_Pending;
 	if ( ((g_Data_Flag==DATA_FREE && g_CMND_Flag == CMD_FREE) )|| (LOC_CurrentTaskAquiringCMD == 1) )
+	{
+		LOC_LCDState = LCD_sendCommand(LCD_ClearScreen);
+		g_CMND_Flag = CMD_ACUIRED;
+		LOC_CurrentTaskAquiringCMD = 1;
+		if (LOC_LCDState == LCD_Finished)
+		{
+			g_CMND_Flag = CMD_FREE;
+			LOC_CurrentTaskAquiringCMD = 0;
+		}
+	}
+	return LOC_LCDState;
+}
+Enum_LCDState LCD_VidDrawPattern(uint8 COPY_u8Row,uint8 COPY_u8Col,uint8* COPY_pu8DrawPattern,uint8 COPY_u8Size)
+{
+	static uint8 LOC_CurrentTaskAquiringCMD=0;
+	static uint8 LOC_LcdState=0;
+	Enum_LCDState LOC_DrawPatternState=LCD_Pending;
+	uint8 LOC_u8Iteration1=0;
+	uint8 LOC_u8Iteration2=0;
+	switch (LOC_LcdState)
+	{
+	case 0:
+		if(LCD_INITALIZED== g_InitFlag && DATA_FREE == g_Data_Flag)
+		{
+
+			if(CMD_FREE==g_CMND_Flag || 1== LOC_CurrentTaskAquiringCMD)
+			{
+				LOC_DrawPatternState=LCD_sendCommand(64);
+				g_CMND_Flag=CMD_ACUIRED;
+				LOC_CurrentTaskAquiringCMD=1;
+				if(LCD_Finished==LOC_DrawPatternState)
 				{
-					LOC_LCDState = LCD_sendCommand(LCD_ClearScreen);
-					g_CMND_Flag = CMD_ACUIRED;
-					LOC_CurrentTaskAquiringCMD = 1;
-					if (LOC_LCDState == LCD_Finished)
+					g_CMND_Flag=CMD_FREE;
+					LOC_CurrentTaskAquiringCMD=0;
+					LOC_LcdState=1;
+					LOC_DrawPatternState=LCD_Pending;
+				}
+			}
+
+		}
+
+		break;
+	case 1:
+		if(CMD_FREE==g_CMND_Flag)
+		{
+			if(DATA_FREE==g_Data_Flag || (1==LOC_CurrentTaskAquiringCMD))
+			{
+				LOC_DrawPatternState=LCD_DataWr(COPY_pu8DrawPattern[LOC_u8Iteration1]);
+				g_Data_Flag=DATA_ACUIRED;
+				LOC_CurrentTaskAquiringCMD=1;
+				if(LCD_Finished==LOC_DrawPatternState)
+				{
+					LOC_u8Iteration1++;
+					LOC_DrawPatternState=LCD_Pending;
+					if(0==COPY_pu8DrawPattern[LOC_u8Iteration1])
 					{
-						g_CMND_Flag = CMD_FREE;
-						LOC_CurrentTaskAquiringCMD = 0;
+						g_Data_Flag=DATA_FREE;
+						LOC_CurrentTaskAquiringCMD=0;
+						LOC_LcdState=2;
+						LOC_DrawPatternState=LCD_Pending;
+						LOC_u8Iteration1=0;
 					}
 				}
-	return LOC_LCDState;
-}//////void LCD_NUM_DISP(uint8 COPY_u8Row , uint8 COPY_u8Column, uint16 COPY_u16num)
+			}
+		}
+		break;
+	case 2:
+		if(DATA_FREE==g_Data_Flag)
+		{
+			if(CMD_FREE==g_CMND_Flag || (1==LOC_CurrentTaskAquiringCMD))
+			{
+				LOC_DrawPatternState=LCD_sendCommand(LCD_BlankDis);
+				g_CMND_Flag=CMD_ACUIRED;
+				LOC_CurrentTaskAquiringCMD=1;
+				if(LCD_Finished==LOC_DrawPatternState)
+				{
+					g_CMND_Flag=CMD_FREE;
+					LOC_CurrentTaskAquiringCMD=0;
+					LOC_LcdState=3;
+					LOC_DrawPatternState=LCD_Pending;
+				}
+			}
+		}
+
+		break;
+	case 3:
+		if(CMD_FREE==g_CMND_Flag||1==LOC_CurrentTaskAquiringCMD)
+		{
+			LOC_DrawPatternState=LCD_gotoRowColumn(COPY_u8Row,COPY_u8Col);
+			g_CMND_Flag=CMD_ACUIRED;
+			LOC_CurrentTaskAquiringCMD=1;
+			if(LCD_Finished==LOC_DrawPatternState)
+			{
+				g_CMND_Flag=CMD_FREE;
+				LOC_CurrentTaskAquiringCMD=0;
+				LOC_LcdState=4;
+				LOC_DrawPatternState=LCD_Pending;
+			}
+		}
+		break;
+	case 4:
+		if(CMD_FREE==g_CMND_Flag)
+		{
+			if(DATA_FREE==g_Data_Flag || 1==LOC_CurrentTaskAquiringCMD)
+			{
+				LOC_DrawPatternState=LCD_DataWr(LOC_u8Iteration2);
+				g_Data_Flag=DATA_ACUIRED;
+				LOC_CurrentTaskAquiringCMD=1;
+				if(LCD_Finished==LOC_DrawPatternState)
+				{
+					LOC_u8Iteration2++;
+					LOC_DrawPatternState=LCD_Pending;
+					if(LOC_u8Iteration2>=COPY_u8Size)
+					{
+						g_Data_Flag=DATA_FREE;
+						LOC_CurrentTaskAquiringCMD=0;
+						LOC_LcdState=0;
+						LOC_DrawPatternState=LCD_Finished;
+						LOC_u8Iteration2=0;
+					}
+				}
+			}
+		}
+		break;
+	}
+
+	return LOC_DrawPatternState;
+}//////void LCD_NUM_DISP(uint8 COPY_u8Row , uint8 COPY_u8Column, uint16 COPY_u16num)
 //{
-	//LCD_gotoRowColumn(COPY_u8Row,COPY_u8Column);
-	//if (0<=COPY_u16num)
-		//{
-		//if (COPY_u16num<=9) LCD_DataWr(COPY_u16num+0x30);
+//LCD_gotoRowColumn(COPY_u8Row,COPY_u8Column);
+//if (0<=COPY_u16num)
+//{
+//if (COPY_u16num<=9) LCD_DataWr(COPY_u16num+0x30);
 //else if(COPY_u16num<=99)
 //{
 //LCD_DataWr((COPY_u16num/10)+0x30);
